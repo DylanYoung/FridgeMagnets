@@ -22,6 +22,7 @@ import javax.swing.WindowConstants;
 public class FridgeClient extends Thread {
 
 	public static final int HEIGHT = 600;
+	public static final int nameSize = 12;
 	private String host;
 	private static final int port = 13000;
 	private JFrame frame;
@@ -78,15 +79,22 @@ public class FridgeClient extends Thread {
 	 * 	If connection fails, it prompts for another host
 	 */
 	private void constructSocket(){
-		host = JOptionPane.showInputDialog("Enter a host for your fridge: ");
+		host = (String) JOptionPane.showInputDialog(frame
+				, "Enter a host for your fridge: "
+				, "Connect", JOptionPane.QUESTION_MESSAGE
+				,null, null, "localhost");
+		
+		if (host == null) System.exit(0);
+		
 		try{
 			this.s = new Socket(host, port);
 			this.output = new ObjectOutputStream(this.s.getOutputStream());
 			this.input = new ObjectInputStream(this.s.getInputStream());	
 		} catch (Exception e){
-			JOptionPane.showMessageDialog(null, "Cannot connect to host; try again.");
+			JOptionPane.showMessageDialog(frame, "Cannot connect to host; try again."
+					, "Cannot Connect", JOptionPane.ERROR_MESSAGE);
 			constructSocket();
-		}	
+		}
 	}
 	
     /**
@@ -112,13 +120,19 @@ public class FridgeClient extends Thread {
 	/**
 	 * Reads a MagnetData object from the server
 	 * 	and returns it
-	 * 	Prints stack trace on exception and returns null
+	 * Prints stack trace on exception, returns null,
+	 * 		removes current magnets, and prompts for
+	 * 			a new connection
 	 */
 	public MagnetData readData(){
 		try{
 			MagnetData data = (MagnetData) this.input.readObject();
 			return data;
 		}catch(Exception e){
+			int size = this.magnets.size() - nameSize;
+			for (int i = size; i > 0; i--)
+				removeMagnet(i-1);
+			constructSocket();
 			e.printStackTrace();
 		}
 		return null;
@@ -134,7 +148,8 @@ public class FridgeClient extends Thread {
 		MagnetData data;
 		while(true){
 			data = readData();
-			switch(data.getType()){
+			
+			if (data != null) switch(data.getType()){
 			case SETUP:
 				addMagnet(new Magnet(data.getId()
 						, data.getX(), data.getY(), data.getLetter(), this));
@@ -155,6 +170,18 @@ public class FridgeClient extends Thread {
 	private void addMagnet(Magnet magnet) {
 		this.magnets.add(magnet);
 		this.frame.getContentPane().add(magnet);
+
+		this.frame.repaint();
+	}
+	
+	/**
+	 * Removes the given magnet to the JFrame
+	 * 	and repaints
+	 */
+	private void removeMagnet(int i) {
+		this.frame.getContentPane().remove(this.magnets.get(i));
+		this.magnets.remove(i);
+		this.frame.revalidate();
 		this.frame.repaint();
 	}
 

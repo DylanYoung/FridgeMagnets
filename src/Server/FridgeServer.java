@@ -13,7 +13,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.locks.ReentrantLock;
-
 import Client.FridgeClient;
 import Client.MagnetData;
 
@@ -43,14 +42,28 @@ public class FridgeServer {
 		this.magnets = new ArrayList<MagnetData>();
 		this.lock = new ReentrantLock();
 		
-		for (int i =0; i < 60; i++){
-			int x = (int) ( Math.random() * (FridgeClient.HEIGHT*2/3 - 40) );
-			int y = (int) ( Math.random() * (FridgeClient.HEIGHT - 40) );
+		
+		for (int i =0; i < 60; i++)
+		{
+			int x = (int) (Math.random() * ( (FridgeClient.HEIGHT*2/3) - 15 ) );
+			int y = (int) (Math.random() * (FridgeClient.HEIGHT - 40) );
 			char letter = (char) (65 + (int) (Math.random() * 26) );
 	
 			this.magnets.add(new MagnetData(i, x, y, letter) );
 		}
-			
+		
+		String name = "CASEY MEIJER";
+		int x = FridgeClient.HEIGHT*2/3 - 20 ;
+		int y = 10;
+		
+		for (int i = name.length(); i > 0; i--)
+		{
+			this.magnets.add(new MagnetData(60+name.length()-i
+					, x,  y + (int) Math.round(Math.random()*2 - 1)*4
+					, name.charAt(i-1) ));
+			x = x - 15;
+			y = y + (int) Math.round(Math.random()*2 - 1)*2;
+		}		
 	}
 
 	/**
